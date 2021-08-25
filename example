@@ -1,3 +1,173 @@
 <template>
+    <!-- Apex chart initialization -->
     <apexchart height="250" :options="chartOptions" :series="series"></apexchart>
+    
+    <!-- Custom legend -->
+    <ul>
+    
+        <!-- 
+        toggleSeries: function, used for click event for specific series
+        highlightSeries: function, used for highlighting the series for specific series
+        hoverOutSeries: function, get back to default state of all series
+        -->
+        <li @click="toggleSeries(student.name, index)" @mouseenter="highlightSeries(student.name)" @mouseleave="hoverOutSeries" :class="student.clicked">
+                <span class="student_marker" :style="{'background' : student.color}"></span>
+                <span class="student_name">{{ student.name }}</span>
+        </li>
+        
+    </ul>
 </template>
+
+<script>
+export default {
+
+    data() {
+            var self = this;  //will be used in apex chart events
+            students: [],
+            deleted_students: [],
+            chartOptions: {
+                    chart: {
+                        type: 'area',                                              
+                        events: {                            
+                            mounted: function (chartContext, config) {
+                                    for (let i = 0; i < self.students.length; i++) {
+                                        self.students[i]['color'] = config.globals.colors[i]
+                                    }                              
+                            },
+                         },                       
+                    },                                                        
+                    xaxis: {
+                        type: 'datetime'                                           
+                    },
+                    yaxis: {                       
+                        min: 0,
+                        forceNiceScale: true,                                          
+                    },                                                 
+                    legend: {
+                        show: false,
+                    }
+                },
+                series: [],
+    },
+    created(){
+        this.fetchChartData();
+    },
+    methods: {
+        fetchChartData(){
+            let series_data = [
+                {"name": "student_1", "data": [{"x": "2021-08-25T15:52:27.105", "y": 4}, {"x": "2021-08-25T18:52:27.105", "y": 10}]}, 
+                {"name": "student2", "data": [{"x": "2021-08-25T15:52:27.105", "y": 5}]}, 
+                {"name": "student3", "data": [{"x": "2021-08-25T15:52:27.105", "y": 3}]}
+            ]
+
+            // We have already created students array in data so pass only students name to students array from series_data
+            // color is undefined by default, but in chartOptions.chart.events.mounted it will be reintialized
+            //clicked:false, to provide css for clicked element
+            series_data.filter(function (item) {
+                   this.students.push({'name': item.name, 'color': undefined, 'clicked': 'false'})
+            }, this);
+            this.series = series_data;
+
+        },
+        toggleSeries(student, index) {
+                // on click of specific legend, we have to remove/hide clicked student name from series and also chart
+                // if clicked again on specific legend, we have push deleted student or hiddent student back to series array at specific position
+                // clicked: false|true, will be used to reduce opacity if clicked
+
+                let get_item = this.series.filter(function (item) {
+                    return item.name === student;
+                });
+
+                if (get_item.length > 0) {
+                    this.students[index]['clicked'] = 'true';
+                    this.series = this.series.filter(function (item) {
+                        if (item.name === student) {
+                            item['index'] = index;
+                            this.deleted_students.push(item);
+                        }
+                        return item.name !== student;
+                    }, this);
+                }
+                else {
+                    this.students[index]['clicked'] = 'false';
+                    this.deleted_students = this.deleted_students.filter(function (item) {
+                        if (item.name === student) {
+
+                            // splice(position, numberOfItemsToRemove, item), this will apply same color to graph curve as before 
+                            this.series.splice(item.index, 0, item);
+                        }
+                        return item.name !== student;
+                    }, this);
+                }
+
+            },
+            highlightSeries(student) {
+                // on hover of specific series we have to highlight hovered series in the graph and also reduce opacity of all other series
+
+                let student_name = student.replace(/_/g, "x");  //if student name contains "_", it will replaced by "x" in apex chart so we have to do the same thing here
+
+                // get all series except highlighted student name
+                let elements = this.$el.querySelectorAll('.apexcharts-area-series g[seriesName]:not(.apexcharts-area-series g[seriesName=' + student_name + '])');
+                
+                // make all student name except highlighted series opacity low
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].style.opacity = 0.2;
+                }
+            },
+            hoverOutSeries() {
+                // on mouse leave fucntion draw graph to default state
+
+                let elements = this.$el.querySelectorAll('.apexcharts-area-series g[seriesName]');
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].style.opacity = 1;
+                }
+            },
+    
+   }
+    
+    
+}
+
+</script>
+<style>
+.students_legend {
+        list-style-type: none;
+
+        & li.true {
+            opacity: 0.5;
+        }
+
+        & li.false {
+            opacity: 1;
+        }
+
+        & .v-slide-group__content {
+            justify-content: center;
+        }
+
+        & li {
+            display: inline-flex !important;
+            padding: 2px 3px !important;
+            cursor: pointer;
+            align-items: center !important;
+            width: auto !important;
+            flex-direction: inherit !important;
+            box-shadow: none !important;
+
+            & .student_marker {
+                display: block;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                margin-right: 3px;
+            }
+
+            & .student_name {
+                font: $desc;
+                color: #B9B9B9;
+            }
+        }
+    }
+
+</style>
+
