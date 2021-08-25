@@ -19,58 +19,63 @@
 </template>
 
 <script>
-export default {
+    export default {
 
-    data() {
+        data() {
             var self = this;  //will be used in apex chart events
-            students: [],
-            deleted_students: [],
-            chartOptions: {
+            return {
+                students: [],
+                deleted_students: [],
+                chartOptions: {
                     chart: {
-                        type: 'area',                                              
-                        events: {      
-                            // this will provide color for each marker to legend
+                        type: 'area',
+                        events: {
+                        // this will provide color for each marker to legend
                             mounted: function (chartContext, config) {
-                                    for (let i = 0; i < self.students.length; i++) {
-                                        self.students[i]['color'] = config.globals.colors[i]
-                                    }                              
-                            },
-                         },                       
-                    },                                                        
-                    xaxis: {
-                        type: 'datetime'                                           
+                                for (let i = 0; i < self.students.length; i++) {
+                                    self.students[i]['color'] = config.globals.colors[i]
+                                }
+                            }
+                        },
                     },
-                    yaxis: {                       
+                    xaxis: {
+                        type: 'datetime'
+                    },
+                    yaxis: {
                         min: 0,
-                        forceNiceScale: true,                                          
-                    },                                                 
+                        forceNiceScale: true,
+                    },
                     legend: {
                         show: false,
                     }
                 },
                 series: [],
-    },
-    created(){
-        this.fetchChartData();
-    },
-    methods: {
-        fetchChartData(){
-            let series_data = [
-                {"name": "student_1", "data": [{"x": "2021-08-25T15:52:27.105", "y": 4}, {"x": "2021-08-25T18:52:27.105", "y": 10}]}, 
-                {"name": "student2", "data": [{"x": "2021-08-25T15:52:27.105", "y": 5}]}, 
-                {"name": "student3", "data": [{"x": "2021-08-25T15:52:27.105", "y": 3}]}
-            ]
-
-            // We have already created students array in data so pass only students name to students array from series_data
-            // color is undefined by default, but in chartOptions.chart.events.mounted it will be reintialized
-            //clicked:false, to provide css for clicked element
-            series_data.filter(function (item) {
-                   this.students.push({'name': item.name, 'color': undefined, 'clicked': 'false'})
-            }, this);
-            this.series = series_data;
-
+            }
         },
-        toggleSeries(student, index) {
+        created() {
+            this.fetchChartData();
+        },
+        methods: {
+            fetchChartData() {
+                let series_data = [
+                    {
+                        "name": "student_1",
+                        "data": [{"x": "2021-08-25T15:52:27.105", "y": 4}, {"x": "2021-08-25T18:52:27.105", "y": 10}]
+                    },
+                    {"name": "student2", "data": [{"x": "2021-08-25T15:52:27.105", "y": 5}]},
+                    {"name": "student3", "data": [{"x": "2021-08-25T15:52:27.105", "y": 3}]}
+                ]
+
+                // We have already created students array in data so pass only students name to students array from series_data
+                // color is undefined by default, but in chartOptions.chart.events.mounted it will be reintialized
+                //clicked:false, to provide css for clicked element
+                series_data.filter(function (item) {
+                    this.students.push({'name': item.name, 'color': undefined, 'clicked': 'false'})
+                }, this);
+                this.series = series_data;
+
+            },
+            toggleSeries(student, index) {
                 // on click of specific legend, we have to remove/hide clicked student name from series and also chart
                 // if clicked again on specific legend, we have push deleted student or hiddent student back to series array at specific position
                 // clicked: false|true, will be used to reduce opacity if clicked
@@ -88,13 +93,12 @@ export default {
                         }
                         return item.name !== student;
                     }, this);
-                }
-                else {
+                } else {
                     this.students[index]['clicked'] = 'false';
                     this.deleted_students = this.deleted_students.filter(function (item) {
                         if (item.name === student) {
 
-                            // splice(position, numberOfItemsToRemove, item), this will apply same color to graph curve as before 
+                            // splice(position, numberOfItemsToRemove, item), this will apply same color to graph curve as before
                             this.series.splice(item.index, 0, item);
                         }
                         return item.name !== student;
@@ -109,7 +113,7 @@ export default {
 
                 // get all series except highlighted student name
                 let elements = this.$el.querySelectorAll('.apexcharts-area-series g[seriesName]:not(.apexcharts-area-series g[seriesName=' + student_name + '])');
-                
+
                 // make all student name except highlighted series opacity low
                 for (let i = 0; i < elements.length; i++) {
                     elements[i].style.opacity = 0.2;
@@ -123,12 +127,11 @@ export default {
                     elements[i].style.opacity = 1;
                 }
             },
-    
-   }
-    
-    
-}
 
+        }
+
+
+    }
 </script>
 <style lang="scss">
     .students_legend {
