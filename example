@@ -1,0 +1,3 @@
+<template>
+    <apexchart height="250" :options="chartOptions" :series="series"></apexchart>
+</template>
